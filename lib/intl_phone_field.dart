@@ -43,13 +43,11 @@ class IntlPhoneField extends StatefulWidget {
   /// An optional method that validates an input. Returns an error string to display if the input is invalid, or null otherwise.
   ///
   /// A [PhoneNumber] is passed to the validator as argument.
-  /// The validator can handle asynchronous validation when declared as a [Future].
-  /// Or run synchronously when declared as a [Function].
   ///
   /// By default, the validator checks whether the input number length is between selected country's phone numbers min and max length.
   /// If `disableLengthCheck` is not set to `true`, your validator returned value will be overwritten by the default validator.
   /// But, if `disableLengthCheck` is set to `true`, your validator will have to check phone number length itself.
-  final FutureOr<String?> Function(PhoneNumber?)? validator;
+  final FormFieldValidator<PhoneNumber>? validator;
 
   /// {@macro flutter.widgets.editableText.keyboardType}
   final TextInputType keyboardType;
@@ -427,6 +425,13 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
         widget.onChanged?.call(phoneNumber);
       },
       validator: (value) {
+        if (widget.validator != null) {
+          return widget.validator?.call(PhoneNumber(
+            countryISOCode: _selectedCountry.code,
+            countryCode: '+${_selectedCountry.fullCountryCode}',
+            number: value ?? '',
+          ));
+        }
         if (value == null || !isNumeric(value)) return validatorMessage;
         if (!widget.disableLengthCheck) {
           return value.length >= _selectedCountry.minLength && value.length <= _selectedCountry.maxLength
